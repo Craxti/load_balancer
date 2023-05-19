@@ -1,0 +1,15 @@
+
+load_balancer:
+  port: 8080
+  timeout: 5
+  max_connections: 100
+  logging:
+    level: INFO
+    file: log.txt
+    rotation_size: 1024
+    backup_count: 5
+  metrics:
+    enabled: true
+    address: localhost
+    port: 9090
+  vps_list_file: vps_list.txt
