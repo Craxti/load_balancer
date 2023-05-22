@@ -1,6 +1,8 @@
 import random
 import requests
 from datetime import datetime
+import subprocess
+import logging
 
 
 class HealthChecker:
@@ -91,19 +93,21 @@ class HealthChecker:
         return random.choice(weighted_vps)
 
     def check_health(self, vps):
-        # Check VPS status, such as checking port availability
+        # Checking the status of the VPS, such as checking the availability of ports
         # Return True if VPS is up, False otherwise
         try:
-            response = requests.head(vps)
-            if response.status_code == 200:
+            # Example: ICMP ping to check VPS health
+            ping_cmd = ['ping', '-c', '1', '-W', '1', vps]
+            result = subprocess.run(ping_cmd, capture_output=True, text=True)
+            if result.returncode == 0:
                 return True
             else:
                 self.remove_vps(vps)  # Remove an unhealthy VPS from the list
-                self.handle_failure(vps)  # Handling a problem with VPS
+                self.handle_failure(vps)  # Handling a VPS Issue
                 return False
-        except requests.exceptions.RequestException:
+        except subprocess.CalledProcessError:
             self.remove_vps(vps)  # Remove an unhealthy VPS from the list
-            self.handle_failure(vps)  # Handling a problem with VPS
+            self.handle_failure(vps)  # Handling a VPS Issue
             return False
 
     def get_response_time(self, vps):
@@ -119,9 +123,16 @@ class HealthChecker:
             return float('inf')
 
     def get_weight(self, vps):
-        # Get VPS weight
-        # Return the weight as an integer
-        return 1
+        # Example: Assigning weights based on VPS attributes or performance metrics
+        if vps.cpu_usage < 80 and vps.memory_usage < 80:
+            # If CPU usage and memory usage are below 80%, assign weight 2
+            return 2
+        elif vps.cpu_usage < 90 or vps.memory_usage < 90:
+            # If either CPU usage or memory usage is below 90%, assign weight 1
+            return 1
+        else:
+            # If both CPU usage and memory usage are above 90%, assign weight 0
+            return 0
 
     def increase_connection_count(self, vps):
         if vps in self.active_connections:
@@ -140,7 +151,16 @@ class HealthChecker:
     def handle_failure(self, vps):
         # Handling an issue with the VPS, such as a reboot or scaling
         # This example just prints an error message
-        print(f"Problem with VPS: {vps}. error handling in progress...")
+        logging.error(f"Problem with VPS: {vps}. error handling in progress...")
 
-        # Here you can add logic for automatic reboot or VPS scaling
-        # depending on your system specifics and requirements.
+        # Example: Execute a custom command or script to handle the failure
+        command = f"handle_vps_failure.sh {vps}"
+        try:
+            subprocess.run(command, shell=True, check=True)
+            logging.info(f"VPS error handling done: {vps}")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error processing VPS error: {vps}, return code: {e.returncode}")
+
+        # You can replace the `handle_vps_failure.sh` with your actual command or script.
+        # This command can perform actions like rebooting the VPS, scaling resources,
+        # or executing any custom recovery procedure based on your system specifics and requirements.
