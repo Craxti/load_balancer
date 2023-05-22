@@ -1,6 +1,7 @@
 import yaml
 import json
 import os
+import dotenv
 
 
 class Configuration:
@@ -11,26 +12,35 @@ class Configuration:
 
     def load(self):
         file_extension = self.get_file_extension()
-        with open(self.config_file, 'r') as file:
-            if file_extension == 'yaml':
-                self.config = yaml.safe_load(file)
-            elif file_extension == 'json':
-                self.config = json.load(file)
-            else:
-                raise ValueError("Unsupported configuration file format")
+
+        if file_extension == 'yaml':
+            self.load_from_yaml()
+        elif file_extension == 'json':
+            self.load_from_json()
+        else:
+            raise ValueError("Unsupported configuration file format")
 
         self.validate_config()
         self.last_modified = os.path.getmtime(self.config_file)
 
+    def load_from_yaml(self):
+        with open(self.config_file, 'r') as file:
+            self.config = yaml.safe_load(file)
+
+    def load_from_json(self):
+        with open(self.config_file, 'r') as file:
+            self.config = json.load(file)
+
     def save(self):
         file_extension = self.get_file_extension()
-        with open(self.config_file, 'w') as file:
-            if file_extension == 'yaml':
+        if file_extension == 'yaml':
+            with open(self.config_file, 'w') as file:
                 yaml.safe_dump(self.config, file)
-            elif file_extension == 'json':
+        elif file_extension == 'json':
+            with open(self.config_file, 'w') as file:
                 json.dump(self.config, file)
-            else:
-                raise ValueError("Unsupported configuration file format")
+        else:
+            raise ValueError("Unsupported configuration file format")
 
     def validate_config(self):
         # Implement configuration validation to ensure correctness and data integrity
@@ -47,3 +57,10 @@ class Configuration:
 
     def get_file_extension(self):
         return self.config_file.rsplit('.', 1)[-1]
+
+    def load_from_environment_variables(self, prefix=''):
+        dotenv.load_dotenv()
+        for key, value in os.environ.items():
+            if key.startswith(prefix):
+                key = key[len(prefix):].lower().replace('_', '.')
+                self.config[key] = value
