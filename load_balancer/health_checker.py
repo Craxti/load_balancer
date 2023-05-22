@@ -157,7 +157,6 @@ class HealthChecker:
         # This example just prints an error message
         logging.error(f"Problem with VPS: {vps}. Error handling in progress...")
 
-        # Example: Execute a custom command or script to handle the failure
         command = f"handle_vps_failure.sh {vps}"
         try:
             subprocess.run(command, shell=True, check=True)
@@ -165,6 +164,6 @@ class HealthChecker:
         except subprocess.CalledProcessError as e:
             logging.error(f"Error processing VPS error: {vps}, return code: {e.returncode}")
 
-        # You can replace the `handle_vps_failure.sh` with your actual command or script.
-        # This command can perform actions like rebooting the VPS, scaling resources,
-        # or executing any custom recovery procedure based on your system specifics and requirements.
+        # If the VPS is marked as down, update the cache
+        if vps not in self.cache or not self.cache[vps]:
+            self.cache[vps] = False
