@@ -7,15 +7,15 @@ class Metrics:
         self.registry = CollectorRegistry()
         self.request_counter = Counter('load_balancer_requests_total', 'Total Requests', registry=self.registry)
         self.response_time_histogram = Histogram('load_balancer_response_time_seconds', 'Response time per second',
-                                                     registry=self.registry)
+                                                 registry=self.registry)
         self.connections_counter = Counter('load_balancer_active_connections_total',
-                                               'Total number of active connections', registry=self.registry)
+                                           'Total number of active connections', registry=self.registry)
         self.throughput_gauge = Gauge('load_balancer_throughput_bytes', 'Data transfer bandwidth in bytes',
-                                          registry=self.registry)
+                                      registry=self.registry)
         self.resource_usage_gauge = Gauge('load_balancer_resource_usage_percent',
-                                              'Percentage of System Resource Usage', registry=self.registry)
+                                          'Percentage of System Resource Usage', registry=self.registry)
         self.anomaly_counter = Counter('load_balancer_anomalies_total', 'Total number of detected anomalies',
-                                           registry=self.registry)
+                                       registry=self.registry)
 
     def setup(self):
         # Initializing the metric collection system (for example, connecting to Prometheus or Graphite)
