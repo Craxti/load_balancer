@@ -1,6 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 from logging import StreamHandler
+import sys
 
 
 class Logger:
@@ -17,9 +18,12 @@ class Logger:
         self.logger.addHandler(file_handler)
 
         # Handler for writing to the console
-        console_handler = StreamHandler()
+        console_handler = StreamHandler(sys.stdout)
         console_handler.setFormatter(log_format)
         self.logger.addHandler(console_handler)
+
+    def set_log_level(self, log_level):
+        self.logger.setLevel(log_level)
 
     def log_request_success(self, vps):
         self.logger.info(f"The request was successfully processed on the VPS: {vps}")
@@ -27,3 +31,18 @@ class Logger:
     def log_request_error(self, vps, error):
         self.logger.error(f"An error occurred on the VPS: {vps}")
         self.logger.error(f"Error: {error}")
+
+    def log_debug(self, message):
+        self.logger.debug(message)
+
+    def log_info(self, message):
+        self.logger.info(message)
+
+    def log_warning(self, message):
+        self.logger.warning(message)
+
+    def log_error(self, message):
+        self.logger.error(message)
+
+    def log_critical(self, message):
+        self.logger.critical(message)
