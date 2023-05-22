@@ -22,6 +22,12 @@ class Logger:
         console_handler.setFormatter(log_format)
         self.logger.addHandler(console_handler)
 
+        # Separate file handlers for different log levels
+        self.error_file_handler = RotatingFileHandler('error.log', maxBytes=1024, backupCount=5)
+        self.error_file_handler.setLevel(logging.ERROR)
+        self.error_file_handler.setFormatter(log_format)
+        self.logger.addHandler(self.error_file_handler)
+
     def set_log_level(self, log_level):
         self.logger.setLevel(log_level)
 
@@ -43,6 +49,14 @@ class Logger:
 
     def log_error(self, message):
         self.logger.error(message)
+        self.error_file_handler.emit(logging.makeLogRecord({
+            'levelname': 'ERROR',
+            'message': message
+        }))
 
     def log_critical(self, message):
         self.logger.critical(message)
+        self.error_file_handler.emit(logging.makeLogRecord({
+            'levelname': 'CRITICAL',
+            'message': message
+        }))
