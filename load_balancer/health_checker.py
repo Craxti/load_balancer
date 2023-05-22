@@ -104,6 +104,11 @@ class HealthChecker:
             ping_cmd = ['ping', '-c', '1', '-W', '1', vps]
             result = subprocess.run(ping_cmd, capture_output=True, text=True)
             if result.returncode == 0:
+                # VPS is up, check if it was previously marked as down
+                if vps in self.cache and not self.cache[vps]:
+                    # VPS was previously marked as down, enable it for load balancing again
+                    self.cache[vps] = True
+                    logging.info(f"VPS is available again: {vps}")
                 return True
             else:
                 self.remove_vps(vps)  # Remove an unhealthy VPS from the list
