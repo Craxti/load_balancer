@@ -58,6 +58,17 @@ class AnomalyMetrics:
         self.anomaly_counter.inc()
 
 
+class VPSMetrics:
+    def __init__(self, vps):
+        self.vps = vps
+        self.response_time_histogram = Histogram('vps_response_time_seconds',
+                                                 'Response time per second for VPS',
+                                                 ['vps'])
+
+    def observe(self, response_time):
+        self.response_time_histogram.labels(self.vps).observe(response_time)
+
+
 class Metrics:
     def __init__(self):
         self.registry = CollectorRegistry()
@@ -67,6 +78,7 @@ class Metrics:
         self.throughput_metrics = ThroughputMetrics(self.registry)
         self.resource_usage_metrics = ResourceUsageMetrics(self.registry)
         self.anomaly_metrics = AnomalyMetrics(self.registry)
+        self.vps_metrics = {}
 
     def setup(self):
         # Initializing the metric collection system (for example, connecting to Prometheus or Graphite)
