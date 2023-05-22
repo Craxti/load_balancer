@@ -3,12 +3,14 @@ import requests
 from datetime import datetime
 import subprocess
 import logging
+from functools import lru_cache
 
 
 class HealthChecker:
     def __init__(self):
         self.vps_list = []
         self.active_connections = {}
+        self.cache = {}
 
     def set_vps_list(self, vps_list):
         self.vps_list = vps_list
@@ -22,6 +24,7 @@ class HealthChecker:
             self.vps_list.remove(vps)
             if vps in self.active_connections:
                 del self.active_connections[vps]
+            self.cache.clear()  # Clear the cache when a VPS is removed
 
     def get_next_available_vps(self):
         available_vps = [vps for vps in self.vps_list if self.check_health(vps)]
@@ -92,6 +95,7 @@ class HealthChecker:
 
         return random.choice(weighted_vps)
 
+    @lru_cache(maxsize=None)  # Caching the check_health results
     def check_health(self, vps):
         # Checking the status of the VPS, such as checking the availability of ports
         # Return True if VPS is up, False otherwise
@@ -151,7 +155,7 @@ class HealthChecker:
     def handle_failure(self, vps):
         # Handling an issue with the VPS, such as a reboot or scaling
         # This example just prints an error message
-        logging.error(f"Problem with VPS: {vps}. error handling in progress...")
+        logging.error(f"Problem with VPS: {vps}. Error handling in progress...")
 
         # Example: Execute a custom command or script to handle the failure
         command = f"handle_vps_failure.sh {vps}"
