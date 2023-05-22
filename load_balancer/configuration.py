@@ -52,6 +52,10 @@ class Configuration:
         if modified_time > self.last_modified:
             self.load()
 
+    def reload_from_external(self, signum, frame):
+        # Reload the configuration in response to an external signal or command
+        self.load()
+
     def get(self, key):
         return self.config.get(key)
 
