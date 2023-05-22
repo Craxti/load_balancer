@@ -1,5 +1,7 @@
 import itertools
+import asyncio
 import requests
+import aiohttp
 from load_balancer.vps_list import VPSList
 from load_balancer.health_checker import HealthChecker
 from load_balancer.logger import Logger
@@ -32,14 +34,18 @@ class LoadBalancer:
         self.vps_manager.remove_vps(vps)
         self.health_checker.remove_vps(vps)
 
-    def distribute_load(self):
+    async def distribute_load(self):
         next_vps = self.get_next_vps()
         try:
-            response = self.request_handler.send_request(next_vps)
+            response = await self.request_handler.send_request(next_vps)
             Logger.log_request_success(next_vps)
             self.metrics.update_metrics(response)
         except requests.exceptions.RequestException as e:
             Logger.log_request_error(next_vps, str(e))
+
+    async def distribute_load_concurrently(self, num_requests):
+        tasks = [self.distribute_load() for _ in range(num_requests)]
+        await asyncio.gather(*tasks)
 
     def get_next_vps(self):
         if self.balancing_algorithm == 'round_robin':
@@ -66,6 +72,8 @@ class LoadBalancer:
         self.configuration = configuration
         self.configuration.load()
 
+    def run(self, num_requests):
+        asyncio.run(self.distribute_load_concurrently(num_requests))
 
 class VPSManager:
     def __init__(self):
@@ -97,17 +105,14 @@ class RequestHandler:
         # For example, if you are using a web framework like Flask, you can retrieve the client's IP using request.remote_addr
         pass
 
-    def send_request(self, vps):
+    async def send_request(self, vps):
         try:
-            # Set a timeout for the request to prevent hanging indefinitely
-            response = requests.get(vps, timeout=5)
-            # Add error handling based on the response status code
-            if response.status_code == 200:
-                return response
-            else:
-                # Handle non-200 status codes, log the error, or perform retries
-                raise requests.exceptions.RequestException(
-                    f"Request to {vps} failed with status code {response.status_code}")
-        except requests.exceptions.RequestException as e:
-            # Handle request exceptions, log the error, or perform retries
-            raise e
+            async with aiohttp.ClientSession() as session:
+                async with session.get(vps, timeout=5) as response:
+                    if response.status == 200:
+                        return await response.text()
+                    else:
+                        raise requests.exceptions.RequestException(
+                            f"Request to {vps} failed with status code {response.status}")
+        except aiohttp.ClientError as e:
+            raise requests.exceptions.RequestException(str(e))

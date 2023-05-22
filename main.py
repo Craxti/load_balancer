@@ -1,13 +1,13 @@
+import asyncio
 from load_balancer.balancer import LoadBalancer
 
 
-def main():
+async def main():
     load_balancer = LoadBalancer()
     load_balancer.load_vps_list('vps_list.txt')
 
-    for _ in range(10):
-        load_balancer.distribute_load()
+    await load_balancer.distribute_load_concurrently(10)
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
