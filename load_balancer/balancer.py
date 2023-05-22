@@ -58,14 +58,41 @@ class LoadBalancer:
         elif self.balancing_algorithm == 'least_response_time':
             return self.health_checker.get_least_response_time_vps()
         elif self.balancing_algorithm == 'ip_hashing':
-            return self.health_checker.get_ip_hashing_vps()
+            client_ip = self.get_client_ip()
+            return self.health_checker.get_ip_hashing_vps(client_ip)
         elif self.balancing_algorithm == 'random_weighted_probabilities':
             return self.health_checker.get_random_weighted_vps()
         else:
             raise ValueError("Unsupported load balancing algorithm")
 
-    def send_request(self, vps):
-        response = requests.get(vps)
+    def get_client_ip(self):
+        # Get the client's IP address from the request
+        # Implement the logic to extract the client IP based on your application's architecture
+        # For example, if you are using a web framework like Flask, you can retrieve the client's IP using request.remote_addr
+        pass
 
-        # Add error handling and retry on failed requests
-        return response
+    def send_request(self, vps):
+        try:
+            # Set a timeout for the request to prevent hanging indefinitely
+            response = requests.get(vps, timeout=5)
+            # Add error handling based on the response status code
+            if response.status_code == 200:
+                return response
+            else:
+                # Handle non-200 status codes, log the error, or perform retries
+                raise requests.exceptions.RequestException(
+                    f"Request to {vps} failed with status code {response.status_code}")
+        except requests.exceptions.RequestException as e:
+            # Handle request exceptions, log the error, or perform retries
+            raise e
+
+    def update_vps_list(self, vps_list):
+        # Update the VPS list dynamically during runtime
+        self.vps_list = vps_list
+        self.health_checker.set_vps_list(vps_list)
+        self.cycle_vps = itertools.cycle(vps_list)
+
+    def update_configuration(self, configuration):
+        # Update the load balancer's configuration dynamically during runtime
+        self.configuration = configuration
+        self.configuration.load()
