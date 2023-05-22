@@ -6,3 +6,4 @@ class VPSList:
             vps_list = [line.strip() for line in file]
 
         return vps_list
+

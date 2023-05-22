@@ -1,0 +1,3 @@
+http://vps1.example.com
+http://vps2.example.com
+http://vps3.example.com
