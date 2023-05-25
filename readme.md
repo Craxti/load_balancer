@@ -2,6 +2,15 @@
 
 Load Balancer is a simple Python package that provides load balancing functionality for distributing incoming network traffic across multiple virtual private servers (VPS).
 
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Features](#features)
+- [Contributing](#contributing)
+- [License](#license)
+
 **Features**
 
 Round-robin load balancing algorithm
